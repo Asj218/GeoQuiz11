@@ -65,5 +65,28 @@ class MainActivity : AppCompatActivity() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
     }
+    //указывает, какую кнопку нажал пользователь
+    private fun checkAnswer(userAnswer: Boolean){
+        val correctAnswer = questionBank[currentIndex].answer
+        val messageResId = if (userAnswer == correctAnswer){
+            R.string.correct_toast
+        } else {
+            R.string.incorrect_toast
+        }
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
+            .show()
+    }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+

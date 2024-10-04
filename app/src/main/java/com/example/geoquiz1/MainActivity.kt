@@ -2,6 +2,7 @@ package com.example.geoquiz1
 
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.view.View
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +17,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
+
+        trueButton.setOnClickListener { View ->
+        // Что-то выполнить после нажатия
+        }
+        falseButton.setOnClickListener { View ->
+
+        }
+
     }
 
 }

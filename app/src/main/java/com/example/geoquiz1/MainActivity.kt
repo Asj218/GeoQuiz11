@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -45,8 +46,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
-            updateQuestion()
+            goToNextQuestion()
+        }
+        questionTextView.setOnClickListener {
+            goToNextQuestion()
         }
 
         updateQuestion()
@@ -66,6 +69,11 @@ class MainActivity : AppCompatActivity() {
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
             .show()
+    }
+    // Выделенная функция для перехода к следующему вопросу
+    private fun goToNextQuestion() {
+        currentIndex = (currentIndex + 1) % questionBank.size
+        updateQuestion()
     }
 
 }

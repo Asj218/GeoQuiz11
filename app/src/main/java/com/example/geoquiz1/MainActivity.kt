@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
     private lateinit var nextButton: Button
+    private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
 
 
@@ -35,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
+        prevButton = findViewById(R.id.prev_button)
         questionTextView = findViewById(R.id.question_text_view)
 
 
@@ -48,6 +50,10 @@ class MainActivity : AppCompatActivity() {
         nextButton.setOnClickListener {
             goToNextQuestion()
         }
+        prevButton.setOnClickListener{
+            goToPreviousQuestion()
+        }
+
         questionTextView.setOnClickListener {
             goToNextQuestion()
         }
@@ -73,6 +79,10 @@ class MainActivity : AppCompatActivity() {
     // Выделенная функция для перехода к следующему вопросу
     private fun goToNextQuestion() {
         currentIndex = (currentIndex + 1) % questionBank.size
+        updateQuestion()
+    }
+    private fun goToPreviousQuestion() {
+        currentIndex = (currentIndex - 1 + questionBank.size) % questionBank.size // Переход к предыдущему вопросу
         updateQuestion()
     }
 

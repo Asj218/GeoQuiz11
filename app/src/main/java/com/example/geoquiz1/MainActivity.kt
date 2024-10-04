@@ -2,6 +2,7 @@ package com.example.geoquiz1
 
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)

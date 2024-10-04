@@ -38,19 +38,10 @@ class MainActivity : AppCompatActivity() {
 
 
         trueButton.setOnClickListener { View ->
-            Toast.makeText(
-                this,
-                R.string.correct_toast,
-                Toast.LENGTH_SHORT)
-                .show()
-
+            checkAnswer(true)
         }
         falseButton.setOnClickListener { View ->
-            Toast.makeText(
-                this,
-                R.string.incorrect_toast,
-                Toast.LENGTH_SHORT)
-                .show()
+            checkAnswer(false)
         }
 
         nextButton.setOnClickListener {

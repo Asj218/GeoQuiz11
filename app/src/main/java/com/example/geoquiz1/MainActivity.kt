@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         Question(R.string.question_asia, true))
     private var currentIndex = 0
 
+    private var isAnswerChecked = false // Флаг, указывающий на то, был ли дан ответ на текущий вопрос
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,14 +53,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         nextButton.setOnClickListener {
-            goToNextQuestion()
+            if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
+                goToNextQuestion()
+            } else {
+                Toast.makeText(this, R.string.choose_answer, Toast.LENGTH_SHORT).show()
+            }
         }
         prevButton.setOnClickListener{
             goToPreviousQuestion()
         }
 
         questionTextView.setOnClickListener {
-            goToNextQuestion()
+            if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
+                goToNextQuestion()
+            } else {
+                Toast.makeText(this, R.string.choose_answer, Toast.LENGTH_SHORT).show()
+            }
         }
 
         updateQuestion()
@@ -94,17 +103,34 @@ class MainActivity : AppCompatActivity() {
     private fun updateQuestion(){
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
+
+        // Сбрасываем флаг, когда переходим к новому вопросу
+        isAnswerChecked = false
+
+        // Разблокируем кнопки, если они были заблокированы
+        trueButton.isEnabled = true
+        falseButton.isEnabled = true
+
     }
     //указывает, какую кнопку нажал пользователь
     private fun checkAnswer(userAnswer: Boolean){
-        val correctAnswer = questionBank[currentIndex].answer
-        val messageResId = if (userAnswer == correctAnswer){
-            R.string.correct_toast
-        } else {
-            R.string.incorrect_toast
+        if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
+            val correctAnswer = questionBank[currentIndex].answer
+            val messageResId = if (userAnswer == correctAnswer){
+                R.string.correct_toast
+            } else {
+                R.string.incorrect_toast
+            }
+            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
+                .show()
+
+
+            // Блокируем кнопки после ответа
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+
+            isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
         }
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-            .show()
     }
     // Выделенная функция для перехода к следующему вопросу
     private fun goToNextQuestion() {

@@ -14,6 +14,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
+private const val KEY_IS_ANSWER_CHECKED = "is_answer_checked"
+private const val KEY_CORRECT_ANSWER_COUNT = "correct_count"
 
 class MainActivity : AppCompatActivity() {
     private lateinit var trueButton: Button
@@ -31,9 +34,8 @@ class MainActivity : AppCompatActivity() {
         Question(R.string.question_americas, true),
         Question(R.string.question_asia, true))
     private var currentIndex = 0
-
     private var isAnswerChecked = false // Флаг, указывающий на то, был ли дан ответ на текущий вопрос
-    private var correctAnswers = 0 // Счетчик правильных ответов
+    private var correctAnswerCount = 0 // Счетчик правильных ответов
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,19 +48,14 @@ class MainActivity : AppCompatActivity() {
         //prevButton = findViewById(R.id.prev_button)
         questionTextView = findViewById(R.id.question_text_view)
 
-
-        trueButton.setOnClickListener { View ->
-            checkAnswer(true)
-        }
-        falseButton.setOnClickListener { View ->
-            checkAnswer(false)
-        }
+        trueButton.setOnClickListener { checkAnswer(true) }
+        falseButton.setOnClickListener { checkAnswer(false) }
 
         nextButton.setOnClickListener {
             if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
                 goToNextQuestion()
             } else {
-                Toast.makeText(this, R.string.choose_answer, Toast.LENGTH_SHORT).show()
+                showToast(R.string.choose_answer)
             }
         }
 /*
@@ -70,12 +67,15 @@ class MainActivity : AppCompatActivity() {
             if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
                 goToNextQuestion()
             } else {
-                Toast.makeText(this, R.string.choose_answer, Toast.LENGTH_SHORT).show()
+                showToast(R.string.choose_answer)
             }
         }
-
+        if (savedInstanceState != null) {
+            currentIndex = savedInstanceState.getInt(KEY_INDEX, 0)
+            isAnswerChecked = savedInstanceState.getBoolean(KEY_IS_ANSWER_CHECKED, false)
+            correctAnswerCount = savedInstanceState.getInt(KEY_CORRECT_ANSWER_COUNT, 0)
+        }
         updateQuestion()
-
     }
 
 
@@ -103,16 +103,16 @@ class MainActivity : AppCompatActivity() {
 //сохранить состояние текущего вопроса и правильных ответов
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt("currentIndex", currentIndex)
-        outState.putInt("correctAnswers", correctAnswers)
+        outState.putInt(KEY_INDEX, currentIndex)
+        outState.putBoolean(KEY_IS_ANSWER_CHECKED, isAnswerChecked)
+        outState.putInt(KEY_CORRECT_ANSWER_COUNT, correctAnswerCount)
     }
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         currentIndex = savedInstanceState.getInt("currentIndex")
-        correctAnswers = savedInstanceState.getInt("correctAnswers")
+        correctAnswerCount = savedInstanceState.getInt("correctAnswers")
         updateQuestion()
     }
-
 
 
 
@@ -120,18 +120,17 @@ class MainActivity : AppCompatActivity() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
 
-        // Сбрасываем флаг, когда переходим к новому вопросу
-        isAnswerChecked = false
-
-        // Разблокируем кнопки, если они были заблокированы
-        trueButton.isEnabled = true
-        falseButton.isEnabled = true
-
-        if (currentIndex == questionBank.size - 1) {
-            nextButton.visibility = View.GONE // Скрываем кнопку "Next"
-            showResult() // Показываем результат
-        } else {
-            nextButton.visibility = View.VISIBLE // Показываем кнопку "Next"
+        isAnswerChecked.takeIf { it }?.let {
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+            if (currentIndex == questionBank.lastIndex) {
+                nextButton.visibility = View.GONE // Скрываем кнопку "Next"
+                showResult() // Показываем результат
+            }
+        } ?: run {
+            trueButton.isEnabled = true
+            falseButton.isEnabled = true
+            nextButton.visibility = View.VISIBLE // Показываем кнопку "Next" в остальных случаях
         }
 
     }
@@ -139,40 +138,32 @@ class MainActivity : AppCompatActivity() {
     private fun checkAnswer(userAnswer: Boolean){
         if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
             val correctAnswer = questionBank[currentIndex].answer
-            val messageResId = if (userAnswer == correctAnswer){
-                correctAnswers++ // Увеличиваем счетчик правильных ответов
-                R.string.correct_toast
-                //correctAnswers++ // Увеличиваем счетчик правильных ответов
+            if (userAnswer == correctAnswer) {
+                showToast(R.string.correct_toast)
+                correctAnswerCount++
             } else {
-                R.string.incorrect_toast
+                showToast(R.string.incorrect_toast)
             }
-            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-                .show()
-
-
-
-            // Блокируем кнопки после ответа
-            trueButton.isEnabled = false
-            falseButton.isEnabled = false
-
             isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
-
+            updateQuestion()
         }
     }
     // Выделенная функция для перехода к следующему вопросу
     private fun goToNextQuestion() {
-        currentIndex = (currentIndex + 1) % questionBank.size
-        updateQuestion()
+        if (currentIndex < questionBank.lastIndex) {
+            currentIndex++
+            isAnswerChecked = false
+            updateQuestion()
+        }
     }
-/*    private fun goToPreviousQuestion() {
-        currentIndex = (currentIndex - 1 + questionBank.size) % questionBank.size // Переход к предыдущему вопросу
-        updateQuestion()
-    } */
-
 
     private fun showResult() {
         // Здесь можно создать диалог или новый экран для отображения результата
-        Toast.makeText(this, "Правильные ответы: $correctAnswers из ${questionBank.size}", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Правильные ответы: $correctAnswerCount из ${questionBank.size}", Toast.LENGTH_LONG).show()
+    }
+
+    private fun showToast(messageResId: Int) {
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
 }
 

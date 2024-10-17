@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
     private lateinit var nextButton: Button
-    private lateinit var prevButton: Button
+    //private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
 
 
@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private var currentIndex = 0
 
     private var isAnswerChecked = false // Флаг, указывающий на то, был ли дан ответ на текущий вопрос
+    private var correctAnswers = 0 // Счетчик правильных ответов
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
-        prevButton = findViewById(R.id.prev_button)
+        //prevButton = findViewById(R.id.prev_button)
         questionTextView = findViewById(R.id.question_text_view)
 
 
@@ -59,10 +61,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.choose_answer, Toast.LENGTH_SHORT).show()
             }
         }
+/*
         prevButton.setOnClickListener{
             goToPreviousQuestion()
         }
-
+*/
         questionTextView.setOnClickListener {
             if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
                 goToNextQuestion()
@@ -95,6 +98,19 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onDestroy() called")
     }
 
+//сохранить состояние текущего вопроса и правильных ответов
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("currentIndex", currentIndex)
+        outState.putInt("correctAnswers", correctAnswers)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        currentIndex = savedInstanceState.getInt("currentIndex")
+        correctAnswers = savedInstanceState.getInt("correctAnswers")
+        updateQuestion()
+    }
 
 
 
@@ -118,6 +134,7 @@ class MainActivity : AppCompatActivity() {
             val correctAnswer = questionBank[currentIndex].answer
             val messageResId = if (userAnswer == correctAnswer){
                 R.string.correct_toast
+                //correctAnswers++ // Увеличиваем счетчик правильных ответов
             } else {
                 R.string.incorrect_toast
             }
@@ -130,6 +147,11 @@ class MainActivity : AppCompatActivity() {
             falseButton.isEnabled = false
 
             isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
+/*
+            //Проверяем, все ли вопросы были отвечены
+            if (currentIndex == questionBank.size - 1) {
+                showResult() // Отображаем результат
+            } */
         }
     }
     // Выделенная функция для перехода к следующему вопросу
@@ -137,11 +159,21 @@ class MainActivity : AppCompatActivity() {
         currentIndex = (currentIndex + 1) % questionBank.size
         updateQuestion()
     }
-    private fun goToPreviousQuestion() {
+/*    private fun goToPreviousQuestion() {
         currentIndex = (currentIndex - 1 + questionBank.size) % questionBank.size // Переход к предыдущему вопросу
         updateQuestion()
+    } */
+
+    /*
+    // Отображение результата
+    private fun showResult() {
+        val percentage = (correctAnswers.toDouble() / questionBank.size * 100).toInt()
+        Toast.makeText(this, getString(R.string.result_text, percentage), Toast.LENGTH_LONG).show()
+        // Сброс счетчика правильных ответов
+        correctAnswers = 0
     }
 
+     */
 }
 
 

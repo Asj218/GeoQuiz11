@@ -13,4 +13,5 @@
     <string name="correct_toast">Correct!</string>
     <string name="incorrect_toast">Incorrect!</string>
     <string name="choose_answer">Дайте ответ на вопрос</string>>
+    <string name="result_text">"Результат: %d%%"</string>>
 </resources>

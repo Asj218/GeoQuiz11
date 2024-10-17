@@ -42,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-
+<!--
         <Button
             android:id="@+id/prev_button"
             android:layout_width="wrap_content"
@@ -51,7 +51,7 @@
             android:drawableEnd="@drawable/arrow_left"
             android:text="@string/prev_button"
             android:drawablePadding="4dp"/>
-
+-->
         <Button
             android:id="@+id/next_button"
             android:layout_width="wrap_content"

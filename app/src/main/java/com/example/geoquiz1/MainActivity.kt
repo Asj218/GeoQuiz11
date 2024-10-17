@@ -77,6 +77,8 @@ class MainActivity : AppCompatActivity() {
         updateQuestion()
 
     }
+
+
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "onStart() called")
@@ -104,14 +106,12 @@ class MainActivity : AppCompatActivity() {
         outState.putInt("currentIndex", currentIndex)
         outState.putInt("correctAnswers", correctAnswers)
     }
-
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         currentIndex = savedInstanceState.getInt("currentIndex")
         correctAnswers = savedInstanceState.getInt("correctAnswers")
         updateQuestion()
     }
-
 
 
 
@@ -127,12 +127,20 @@ class MainActivity : AppCompatActivity() {
         trueButton.isEnabled = true
         falseButton.isEnabled = true
 
+        if (currentIndex == questionBank.size - 1) {
+            nextButton.visibility = View.GONE // Скрываем кнопку "Next"
+            showResult() // Показываем результат
+        } else {
+            nextButton.visibility = View.VISIBLE // Показываем кнопку "Next"
+        }
+
     }
     //указывает, какую кнопку нажал пользователь
     private fun checkAnswer(userAnswer: Boolean){
         if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
             val correctAnswer = questionBank[currentIndex].answer
             val messageResId = if (userAnswer == correctAnswer){
+                correctAnswers++ // Увеличиваем счетчик правильных ответов
                 R.string.correct_toast
                 //correctAnswers++ // Увеличиваем счетчик правильных ответов
             } else {
@@ -142,16 +150,13 @@ class MainActivity : AppCompatActivity() {
                 .show()
 
 
+
             // Блокируем кнопки после ответа
             trueButton.isEnabled = false
             falseButton.isEnabled = false
 
             isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
-/*
-            //Проверяем, все ли вопросы были отвечены
-            if (currentIndex == questionBank.size - 1) {
-                showResult() // Отображаем результат
-            } */
+
         }
     }
     // Выделенная функция для перехода к следующему вопросу
@@ -164,16 +169,11 @@ class MainActivity : AppCompatActivity() {
         updateQuestion()
     } */
 
-    /*
-    // Отображение результата
-    private fun showResult() {
-        val percentage = (correctAnswers.toDouble() / questionBank.size * 100).toInt()
-        Toast.makeText(this, getString(R.string.result_text, percentage), Toast.LENGTH_LONG).show()
-        // Сброс счетчика правильных ответов
-        correctAnswers = 0
-    }
 
-     */
+    private fun showResult() {
+        // Здесь можно создать диалог или новый экран для отображения результата
+        Toast.makeText(this, "Правильные ответы: $correctAnswers из ${questionBank.size}", Toast.LENGTH_LONG).show()
+    }
 }
 
 

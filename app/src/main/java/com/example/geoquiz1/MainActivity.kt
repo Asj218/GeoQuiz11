@@ -12,19 +12,29 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import android.content.Intent
+import androidx.lifecycle.ViewModelProvider
+
 
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "index"
 private const val KEY_IS_ANSWER_CHECKED = "is_answer_checked"
 private const val KEY_CORRECT_ANSWER_COUNT = "correct_count"
+private const val REQUEST_CODE_CHEAT = 0
 
 class MainActivity : AppCompatActivity() {
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
     private lateinit var nextButton: Button
+    private lateinit var cheatButton: Button
     //private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
+    //private lateinit var quizViewModel: QuizViewModel
 
+    private val quizViewModel: QuizViewModel by
+    lazy {
+        ViewModelProvider(this).get(QuizViewModel::class.java)
+    }
 
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
@@ -45,9 +55,10 @@ class MainActivity : AppCompatActivity() {
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
+        cheatButton = findViewById(R.id.cheat_button)
         //prevButton = findViewById(R.id.prev_button)
+        //quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
         questionTextView = findViewById(R.id.question_text_view)
-
         trueButton.setOnClickListener { checkAnswer(true) }
         falseButton.setOnClickListener { checkAnswer(false) }
 
@@ -58,11 +69,27 @@ class MainActivity : AppCompatActivity() {
                 showToast(R.string.choose_answer)
             }
         }
-/*
-        prevButton.setOnClickListener{
-            goToPreviousQuestion()
+
+        cheatButton.setOnClickListener {
+            val answerIsTrue = quizViewModel.currentQuestionAnswer
+            val intent = CheatActivity.newIntent(this@MainActivity,answerIsTrue = true)
+            // Переход на новую активити
+            //val intent = Intent(this, CheatActivity::class.java)
+
+            // Передача информации о правильном ответе, если нужно
+/*            intent.putExtra("ANSWER_IS_TRUE", questionBank[currentIndex].answer)
+            */
+
+            startActivityForResult(intent, REQUEST_CODE_CHEAT)
         }
-*/
+        updateQuestion()
+
+
+        /*
+                prevButton.setOnClickListener{
+                    goToPreviousQuestion()
+                }
+        */
         questionTextView.setOnClickListener {
             if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
                 goToNextQuestion()

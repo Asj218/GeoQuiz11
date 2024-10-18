@@ -22,6 +22,7 @@ private const val KEY_IS_ANSWER_CHECKED = "is_answer_checked"
 private const val KEY_CORRECT_ANSWER_COUNT = "correct_count"
 private const val REQUEST_CODE_CHEAT = 0
 
+
 class MainActivity : AppCompatActivity() {
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 /*            intent.putExtra("ANSWER_IS_TRUE", questionBank[currentIndex].answer)
             */
 
-            startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            startActivityForResult(intent,REQUEST_CODE_CHEAT)
         }
         updateQuestion()
 

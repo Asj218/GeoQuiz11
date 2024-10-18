@@ -1,5 +1,6 @@
 package com.example.geoquiz1
 
+import android.app.Activity
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -105,6 +106,22 @@ class MainActivity : AppCompatActivity() {
         }
         updateQuestion()
     }
+    override fun onActivityResult(
+        requestCode:Int,
+        resultCode:Int,
+        data: Intent?){
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != Activity.RESULT_OK) {
+            return
+        }
+        if (requestCode == REQUEST_CODE_CHEAT)
+        {
+            quizViewModel.isCheater = data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) ?: false
+        }
+
+    }
+
+
 
 
     override fun onStart() {

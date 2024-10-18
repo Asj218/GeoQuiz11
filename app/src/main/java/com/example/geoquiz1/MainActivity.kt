@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
+
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
         Question(R.string.question_oceans, true),
@@ -181,7 +182,15 @@ class MainActivity : AppCompatActivity() {
     }
     //указывает, какую кнопку нажал пользователь
     private fun checkAnswer(userAnswer: Boolean){
-        if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
+        val correctAnswer: Boolean = quizViewModel.currentQuestionAnswer
+        val messageResId = when {
+            quizViewModel.isCheater -> R.string.judgment_toast
+            userAnswer == correctAnswer -> R.string.correct_toast
+            else -> R.string.incorrect_toast
+        }
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
+            .show()
+        /*if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
             val correctAnswer = questionBank[currentIndex].answer
             if (userAnswer == correctAnswer) {
                 showToast(R.string.correct_toast)
@@ -191,7 +200,7 @@ class MainActivity : AppCompatActivity() {
             }
             isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
             updateQuestion()
-        }
+        }*/
     }
     // Выделенная функция для перехода к следующему вопросу
     private fun goToNextQuestion() {

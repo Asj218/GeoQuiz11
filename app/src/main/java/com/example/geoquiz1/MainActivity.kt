@@ -1,234 +1,189 @@
 package com.example.geoquiz1
 
-import android.app.Activity
+
+import android.health.connect.datatypes.units.Length
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.content.Intent
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
-
+import android.content.Intent
+import android.app.Activity
+import android.annotation.SuppressLint
+import android.app.ActivityOptions
+import android.os.Build
 
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "index"
-private const val KEY_IS_ANSWER_CHECKED = "is_answer_checked"
-private const val KEY_CORRECT_ANSWER_COUNT = "correct_count"
-private const val REQUEST_CODE_CHEAT = 0
-
+private const val REQUEST_CODE_CHEAT=0
 
 class MainActivity : AppCompatActivity() {
+    @SuppressLint("RestrictedApi")
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
     private lateinit var nextButton: Button
-    private lateinit var cheatButton: Button
-    //private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
-    //private lateinit var quizViewModel: QuizViewModel
-
+    private lateinit var cheatButton: Button
+    var curCheat=0
+    var i = 1
+    var score = 0
     private val quizViewModel: QuizViewModel by
     lazy {
         ViewModelProvider(this).get(QuizViewModel::class.java)
     }
 
-
-    private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true))
-    private var currentIndex = 0
-    private var isAnswerChecked = false // Флаг, указывающий на то, был ли дан ответ на текущий вопрос
-    private var correctAnswerCount = 0 // Счетчик правильных ответов
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate(Bundle?) called")
+
+        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        val currentIndex =
+            savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
+
+        val provider: ViewModelProvider = ViewModelProvider(this)
+        val quizViewModel =
+            provider.get(QuizViewModel::class.java)
+        Log.d(TAG, "Got a QuizViewModel:$quizViewModel")
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
-        cheatButton = findViewById(R.id.cheat_button)
-        //prevButton = findViewById(R.id.prev_button)
-        //quizViewModel = ViewModelProvider(this).get(QuizViewModel::class.java)
+        nextButton.visibility=View.INVISIBLE
         questionTextView = findViewById(R.id.question_text_view)
-        trueButton.setOnClickListener { checkAnswer(true) }
-        falseButton.setOnClickListener { checkAnswer(false) }
+        cheatButton=findViewById(R.id.cheat_button)
 
+        trueButton.setOnClickListener { view: View ->
+            checkAnswer(true)
+        }
+        falseButton.setOnClickListener { view: View ->
+            checkAnswer(false)
+        }
         nextButton.setOnClickListener {
-            if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
-                goToNextQuestion()
-            } else {
-                showToast(R.string.choose_answer)
-            }
-        }
-
-        cheatButton.setOnClickListener {
-            val answerIsTrue = quizViewModel.currentQuestionAnswer
-            val intent = CheatActivity.newIntent(this@MainActivity,answerIsTrue = true)
-            // Переход на новую активити
-            //val intent = Intent(this, CheatActivity::class.java)
-
-            // Передача информации о правильном ответе, если нужно
-/*            intent.putExtra("ANSWER_IS_TRUE", questionBank[currentIndex].answer)
-            */
-
-            startActivityForResult(intent,REQUEST_CODE_CHEAT)
+            quizViewModel.moveToNext()
+            updateQuestion()
         }
         updateQuestion()
-
-
-        /*
-                prevButton.setOnClickListener{
-                    goToPreviousQuestion()
-                }
-        */
-        questionTextView.setOnClickListener {
-            if (isAnswerChecked) { // Проверяем, был ли дан ответ на текущий вопрос
-                goToNextQuestion()
-            } else {
-                showToast(R.string.choose_answer)
+        cheatButton.setOnClickListener()
+        {
+            val answerIsTrue=quizViewModel.currentQuestionAnswer
+            val intent=CheatActivity.newIntent(this@MainActivity,answerIsTrue)
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M)
+            {
+                val options = ActivityOptions.makeClipRevealAnimation(cheatButton, 0, 0, cheatButton.width, cheatButton.height)
+                startActivityForResult(intent,REQUEST_CODE_CHEAT,options.toBundle())
+            }else
+            {
+                startActivityForResult(intent,REQUEST_CODE_CHEAT)
             }
         }
-        if (savedInstanceState != null) {
-            currentIndex = savedInstanceState.getInt(KEY_INDEX, 0)
-            isAnswerChecked = savedInstanceState.getBoolean(KEY_IS_ANSWER_CHECKED, false)
-            correctAnswerCount = savedInstanceState.getInt(KEY_CORRECT_ANSWER_COUNT, 0)
-        }
-        updateQuestion()
     }
-    override fun onActivityResult(
-        requestCode:Int,
-        resultCode:Int,
-        data: Intent?){
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
+    {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode != Activity.RESULT_OK) {
+        if(resultCode != Activity.RESULT_OK)
+        {
             return
         }
-        if (requestCode == REQUEST_CODE_CHEAT)
+        if( requestCode== REQUEST_CODE_CHEAT)
         {
-            quizViewModel.isCheater = data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) ?: false
+            quizViewModel.isCheater=data?.getBooleanExtra(EXTRA_ANSWER_SHOWN,false)?:false
         }
-
     }
-
-
-
-
     override fun onStart() {
         super.onStart()
-        Log.d(TAG, "onStart() called")
+        Log.d(TAG,
+            "onStart() called")
     }
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "onResume() called")
+        Log.d(TAG,
+            "onResume() called")
     }
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "onPause() called")
+        Log.d(TAG,
+            "onPause() called")
     }
+    override fun onSaveInstanceState(savedInstanceState: Bundle)
+    {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.i(TAG, "onSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+    }
+
     override fun onStop() {
         super.onStop()
-        Log.d(TAG, "onStop() called")
+        Log.d(TAG,
+            "onStop() called")
     }
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy() called")
+        Log.d(TAG,
+            "onDestroy() called")
     }
 
-//сохранить состояние текущего вопроса и правильных ответов
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt(KEY_INDEX, currentIndex)
-        outState.putBoolean(KEY_IS_ANSWER_CHECKED, isAnswerChecked)
-        outState.putInt(KEY_CORRECT_ANSWER_COUNT, correctAnswerCount)
-    }
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        currentIndex = savedInstanceState.getInt("currentIndex")
-        correctAnswerCount = savedInstanceState.getInt("correctAnswers")
-        updateQuestion()
-    }
-
-
-
-    private fun updateQuestion(){
-        val questionTextResId = questionBank[currentIndex].textResId
+    private fun updateQuestion() {
+        trueButton.visibility= View.VISIBLE
+        falseButton.visibility= View.VISIBLE
+        i++
+        if(i==6)
+            nextButton.visibility=View.INVISIBLE
+        if(curCheat==3)
+        {
+            cheatButton.visibility=View.INVISIBLE
+        }else
+        {
+            cheatButton.visibility=View.VISIBLE
+        }
+        val questionTextResId =
+            quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
-
-        isAnswerChecked.takeIf { it }?.let {
-            trueButton.isEnabled = false
-            falseButton.isEnabled = false
-            if (currentIndex == questionBank.lastIndex) {
-                nextButton.visibility = View.GONE // Скрываем кнопку "Next"
-                showResult() // Показываем результат
+    }
+    private fun checkAnswer(userAnswer: Boolean)
+    {
+        trueButton.visibility= View.INVISIBLE
+        falseButton.visibility= View.INVISIBLE
+        cheatButton.visibility=View.INVISIBLE
+        val correctAnswer:Boolean=quizViewModel.currentQuestionAnswer
+        val messageResId=when{
+            quizViewModel.isCheater-> {
+                curCheat++
+                quizViewModel.isCheater=false
+                R.string.judgment_toast
             }
-        } ?: run {
-            trueButton.isEnabled = true
-            falseButton.isEnabled = true
-            nextButton.visibility = View.VISIBLE // Показываем кнопку "Next" в остальных случаях
+            userAnswer==correctAnswer->R.string.correct_toast
+            else->R.string.incorrect_toast
         }
-
-    }
-    //указывает, какую кнопку нажал пользователь
-    private fun checkAnswer(userAnswer: Boolean){
-        val correctAnswer: Boolean = quizViewModel.currentQuestionAnswer
-        val messageResId = when {
-            quizViewModel.isCheater -> R.string.judgment_toast
-            userAnswer == correctAnswer -> R.string.correct_toast
-            else -> R.string.incorrect_toast
-        }
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-            .show()
-        /*if (!isAnswerChecked) { // Проверяем, был ли дан ответ на этот вопрос
-            val correctAnswer = questionBank[currentIndex].answer
-            if (userAnswer == correctAnswer) {
-                showToast(R.string.correct_toast)
-                correctAnswerCount++
-            } else {
-                showToast(R.string.incorrect_toast)
-            }
-            isAnswerChecked = true // Устанавливаем флаг, чтобы показать, что ответ был дан
-            updateQuestion()
-        }*/
-    }
-    // Выделенная функция для перехода к следующему вопросу
-    private fun goToNextQuestion() {
-        if (currentIndex < questionBank.lastIndex) {
-            currentIndex++
-            isAnswerChecked = false
-            updateQuestion()
-        }
-    }
-
-    private fun showResult() {
-        // Здесь можно создать диалог или новый экран для отображения результата
-        Toast.makeText(this, "Правильные ответы: $correctAnswerCount из ${questionBank.size}", Toast.LENGTH_LONG).show()
-    }
-
-    private fun showToast(messageResId: Int) {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        if (userAnswer == correctAnswer) {
+            score = score + 1
+        } else {
+            score = score
+        }
+        if (i == 6){
+            Toast.makeText(this,"Ваш счет: " + score.toString(), Toast.LENGTH_LONG).show()
+
+        }
+        if (i != 6) nextButton.visibility=View.VISIBLE
+
+        if(curCheat==3)
+        {
+            cheatButton.visibility=View.INVISIBLE
+        }
+
     }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
